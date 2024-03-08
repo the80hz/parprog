@@ -1,49 +1,44 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <chrono>
 
 
 int main() {
-    FILE *fileA = fopen("matrixA.txt", "r"), *fileB = fopen("matrixB.txt", "r"),
-         *fileC = fopen("resultMatrix.txt", "w");
-    if (!fileA || !fileB) {
-        printf("Could not open the file!\n");
+    std::ifstream fileA("matrixA.txt"), fileB("matrixB.txt");
+    std::ofstream fileC("resultMatrix.txt");
+    if (!fileA.is_open() || !fileB.is_open()) {
+        std::cout << "Could not open the file!" << std::endl;
         return 1;
     }
 
     int rowsA, colsA, rowsB, colsB;
-    fscanf(fileA, "%d %d", &rowsA, &colsA);
-    fscanf(fileB, "%d %d", &rowsB, &colsB);
+    fileA >> rowsA >> colsA;
+    fileB >> rowsB >> colsB;
 
     if (colsA != rowsB) {
-        printf("Matrices cannot be multiplied!\n");
+        std::cout << "Matrix cannot be multiplied!" << std::endl;
         return 1;
     }
 
-    int **matrixA = (int **)malloc(rowsA * sizeof(int *));
-    int **matrixB = (int **)malloc(rowsB * sizeof(int *));
-    int **resultMatrix = (int **)malloc(rowsA * sizeof(int *));
-    for (int i = 0; i < rowsA; i++) {
-        matrixA[i] = (int *)malloc(colsA * sizeof(int));
-        resultMatrix[i] = (int *)calloc(colsB, sizeof(int));
-    }
-    for (int i = 0; i < rowsB; i++) {
-        matrixB[i] = (int *)malloc(colsB * sizeof(int));
-    }
+    std::vector<std::vector<int>> matrixA(rowsA, std::vector<int>(colsA));
+    std::vector<std::vector<int>> matrixB(rowsB, std::vector<int>(colsB));
+    std::vector<std::vector<int>> resultMatrix(rowsA, std::vector<int>(colsB, 0));
 
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsA; j++) {
-            fscanf(fileA, "%d", &matrixA[i][j]);
+            fileA >> matrixA[i][j];
         }
     }
 
     for (int i = 0; i < rowsB; i++) {
         for (int j = 0; j < colsB; j++) {
-            fscanf(fileB, "%d", &matrixB[i][j]);
+            fileB >> matrixB[i][j];
         }
     }
 
-    clock_t start = clock();
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
             for (int k = 0; k < colsA; k++) {
@@ -51,32 +46,22 @@ int main() {
             }
         }
     }
-    clock_t stop = clock();
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
-            fprintf(fileC, "%d ", resultMatrix[i][j]);
+            fileC << resultMatrix[i][j] << " ";
         }
-        fprintf(fileC, "\n");
+        fileC << "\n";
     }
 
-    double duration = (double)(stop - start) * 1000.0 / CLOCKS_PER_SEC;
-    printf("Execution time: %f milliseconds\n", duration);
+    std::cout << "Execution time: " << duration.count() << " microseconds" << std::endl;
 
-    for (int i = 0; i < rowsA; i++) {
-        free(matrixA[i]);
-        free(resultMatrix[i]);
-    }
-    for (int i = 0; i < rowsB; i++) {
-        free(matrixB[i]);
-    }
-    free(matrixA);
-    free(matrixB);
-    free(resultMatrix);
-
-    fclose(fileA);
-    fclose(fileB);
-    fclose(fileC);
+    fileA.close();
+    fileB.close();
+    fileC.close();
 
     return 0;
 }
