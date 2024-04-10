@@ -48,7 +48,7 @@ int main() {
     }
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
 
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
@@ -57,7 +57,7 @@ int main() {
         fileC << "\n";
     }
 
-    std::cout << "Execution time: " << duration.count() << " microseconds" << std::endl;
+    std::cout << "Execution time: " << duration.count() << " nanoseconds" << std::endl;
 
     fileA.close();
     fileB.close();

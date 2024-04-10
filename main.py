@@ -19,9 +19,9 @@ def compare_matrices(matrix1, matrix2):
 
 
 def main():
-    matrix_a = read_matrix("matrixA.txt")
-    matrix_b = read_matrix("matrixB.txt")
-    result_matrix = read_results("resultMatrix.txt")
+    matrix_a = read_matrix("cmake-build-release/matrixA.txt")
+    matrix_b = read_matrix("cmake-build-release/matrixB.txt")
+    result_matrix = read_results("cmake-build-release/resultMatrix.txt")
 
     calculated_result = np.dot(matrix_a, matrix_b)
 
