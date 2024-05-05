@@ -18,13 +18,7 @@ def run_command(command):
         exit(1)
 
 
-def main():
-    sizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
-    results = []
-    confidence_intervals = []
-    path = "cmake-build-release"
-
-    # cmake 'main.cpp'
+def cmake_build():
     build_dir = "cmake-build-release"
     os.makedirs(build_dir, exist_ok=True)
     os.chdir(build_dir)
@@ -34,11 +28,20 @@ def main():
     run_command(["cmake", "--build", ".", "--config", "Release"])
     os.chdir("..")
 
+
+def main():
+    sizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+    results = []
+    confidence_intervals = []
+    path = "cmake-build-release"
+
+    cmake_build()
+
     for size in sizes:
         times = []
         correctness = []
         print(size)
-        for _ in range(10):
+        for _ in range(2):
             matrix_a = generate_matrices(size, size)
             matrix_b = generate_matrices(size, size)
 
@@ -47,7 +50,7 @@ def main():
 
             os.chdir(path)
             start = time.time()
-            os.system("./parprog_lab1")
+            os.system("./parprog")
             elapsed = time.time() - start
             times.append(elapsed)
             os.chdir("..")

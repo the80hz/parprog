@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
-project(parprog_lab1)
+project(parprog)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(parprog_lab1 main.cpp)
+add_executable(parprog main.cpp)
