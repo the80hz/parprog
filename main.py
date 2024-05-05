@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import t
 
-from utils import generate_matrices_and_empty_result_file, compare_matrices, read_matrix, read_results
+from utils import generate_matrices, save_matrix, read_matrix, compare_matrices
 
 
 def run_command(command):
@@ -39,8 +39,12 @@ def main():
         correctness = []
         print(size)
         for _ in range(10):
-            generate_matrices_and_empty_result_file(size, size, size, size,
-                                                    value_range=(0, 100), output_dir=path)
+            matrix_a = generate_matrices(size, size)
+            matrix_b = generate_matrices(size, size)
+
+            save_matrix(matrix_a, f"{path}/matrixA.txt")
+            save_matrix(matrix_b, f"{path}/matrixB.txt")
+
             os.chdir(path)
             start = time.time()
             os.system("./parprog_lab1")
@@ -50,7 +54,7 @@ def main():
 
             matrix_a = read_matrix(f"{path}/matrixA.txt")
             matrix_b = read_matrix(f"{path}/matrixB.txt")
-            result_matrix = read_results(f"{path}/resultMatrix.txt")
+            result_matrix = read_matrix(f"{path}/resultMatrix.txt")
             calculated_result = np.dot(matrix_a, matrix_b)
 
             if compare_matrices(calculated_result, result_matrix):
