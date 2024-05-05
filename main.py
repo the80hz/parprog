@@ -1,33 +1,56 @@
 import os
+import subprocess
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import t
-import time
 
 from utils import generate_matrices_and_empty_result_file, compare_matrices, read_matrix, read_results
+
+
+def run_command(command):
+    try:
+        result = subprocess.run(command, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"Command succeeded: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error running command: {e.stderr}")
+        exit(1)
 
 
 def main():
     sizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
     results = []
     confidence_intervals = []
+    path = "cmake-build-release"
+
+    # cmake 'main.cpp'
+    build_dir = "cmake-build-release"
+    os.makedirs(build_dir, exist_ok=True)
+    os.chdir(build_dir)
+
+    run_command(["cmake", "-DCMAKE_BUILD_TYPE=Release", ".."])
+
+    run_command(["cmake", "--build", ".", "--config", "Release"])
+    os.chdir("..")
 
     for size in sizes:
         times = []
         correctness = []
         print(size)
-        for _ in range(100):
-            generate_matrices_and_empty_result_file(size, size, size, size)
-            os.chdir("cmake-build-release")
+        for _ in range(10):
+            generate_matrices_and_empty_result_file(size, size, size, size,
+                                                    value_range=(0, 100), output_dir=path)
+            os.chdir(path)
             start = time.time()
             os.system("./parprog_lab1")
             elapsed = time.time() - start
             times.append(elapsed)
             os.chdir("..")
 
-            matrix_a = read_matrix("cmake-build-release/matrixA.txt")
-            matrix_b = read_matrix("cmake-build-release/matrixB.txt")
-            result_matrix = read_results("cmake-build-release/resultMatrix.txt")
+            matrix_a = read_matrix(f"{path}/matrixA.txt")
+            matrix_b = read_matrix(f"{path}/matrixB.txt")
+            result_matrix = read_results(f"{path}/resultMatrix.txt")
             calculated_result = np.dot(matrix_a, matrix_b)
 
             if compare_matrices(calculated_result, result_matrix):
