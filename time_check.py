@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import t
 import time
 
-from gen import generate_matrices_and_empty_result_file
-from main import compare_matrices, read_matrix, read_results
+from utils import generate_matrices_and_empty_result_file, compare_matrices, read_matrix, read_results
 
 
 def main():
