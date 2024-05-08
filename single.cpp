@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <chrono>
 
 
 int main() {
@@ -37,8 +36,6 @@ int main() {
         }
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
-
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
             for (int k = 0; k < colsA; k++) {
@@ -47,17 +44,12 @@ int main() {
         }
     }
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
-
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
             fileC << resultMatrix[i][j] << " ";
         }
         fileC << "\n";
     }
-
-    std::cout << "Execution time: " << duration.count() << " nanoseconds" << std::endl;
 
     fileA.close();
     fileB.close();

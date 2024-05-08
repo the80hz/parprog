@@ -41,7 +41,7 @@ def main():
         times = []
         correctness = []
         print(size)
-        for _ in range(2):
+        for _ in range(5):
             matrix_a = generate_matrices(size, size)
             matrix_b = generate_matrices(size, size)
 
@@ -50,7 +50,7 @@ def main():
 
             os.chdir(path)
             start = time.time()
-            os.system("./parprog")
+            os.system("./mpi")
             elapsed = time.time() - start
             times.append(elapsed)
             os.chdir("..")
