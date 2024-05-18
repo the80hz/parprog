@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 
-# Add OpenMP support
 find_package(OpenMP REQUIRED)
 
 add_executable(single single.cpp)
