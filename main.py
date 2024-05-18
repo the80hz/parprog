@@ -1,13 +1,8 @@
 import os
 import subprocess
-import time
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import t
-
-from utils import generate_matrices, save_matrix, read_matrix, compare_matrices
-
 
 def run_command(command):
     try:
@@ -17,72 +12,73 @@ def run_command(command):
         print(f"Error running command: {e.stderr}")
         exit(1)
 
-
 def cmake_build():
-    build_dir = "cmake-build-release"
+    build_dir = "build"
     os.makedirs(build_dir, exist_ok=True)
     os.chdir(build_dir)
-
+    
     run_command(["cmake", "-DCMAKE_BUILD_TYPE=Release", ".."])
-
     run_command(["cmake", "--build", ".", "--config", "Release"])
     os.chdir("..")
 
+def read_matrix(filepath):
+    with open(filepath, 'r') as file:
+        matrix = [list(map(int, line.split())) for line in file]
+    return np.array(matrix)
+
+def read_timing_results(filepath):
+    sizes = []
+    times = []
+    with open(filepath, 'r') as file:
+        for line in file:
+            size, time = map(float, line.split())
+            sizes.append(int(size))
+            times.append(time)
+    return sizes, times
+
+def verify_results(matrix_a, matrix_b, result_matrix):
+    calculated_result = np.dot(matrix_a, matrix_b)
+    return np.allclose(calculated_result, result_matrix)
 
 def main():
     sizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
     results = []
-    confidence_intervals = []
-    path = "cmake-build-release"
 
     cmake_build()
 
+    os.chdir("build")
+    run_command(["./single"])
+    os.chdir("..")
+
+    timing_results_file = "build/timingResults.txt"
+    if not os.path.exists(timing_results_file):
+        print("Timing results file not found. Please ensure the C++ program has been run successfully.")
+        return
+
+    sizes, times = read_timing_results(timing_results_file)
+
+    correctness = []
     for size in sizes:
-        times = []
-        correctness = []
-        print(size)
-        for _ in range(5):
-            matrix_a = generate_matrices(size, size)
-            matrix_b = generate_matrices(size, size)
+        matrix_a = read_matrix(f"build/matrixA_{size}.txt")
+        matrix_b = read_matrix(f"build/matrixB_{size}.txt")
+        result_matrix = read_matrix(f"build/resultMatrix_{size}.txt")
+        if verify_results(matrix_a, matrix_b, result_matrix):
+            correctness.append(True)
+        else:
+            correctness.append(False)
 
-            save_matrix(matrix_a, f"{path}/matrixA.txt")
-            save_matrix(matrix_b, f"{path}/matrixB.txt")
+    for size, time, correct in zip(sizes, times, correctness):
+        print(f"Size: {size}, Time: {time:.4f}s, Correct: {correct}")
 
-            os.chdir(path)
-            start = time.time()
-            os.system("./mpi")
-            elapsed = time.time() - start
-            times.append(elapsed)
-            os.chdir("..")
-
-            matrix_a = read_matrix(f"{path}/matrixA.txt")
-            matrix_b = read_matrix(f"{path}/matrixB.txt")
-            result_matrix = read_matrix(f"{path}/resultMatrix.txt")
-            calculated_result = np.dot(matrix_a, matrix_b)
-
-            if compare_matrices(calculated_result, result_matrix):
-                correctness.append(True)
-            else:
-                correctness.append(False)
-
-        mean_time = np.mean(times)
-        std_dev = np.std(times, ddof=1)
-        conf_interval = t.interval(0.95, len(times)-1, loc=mean_time, scale=std_dev/np.sqrt(len(times)))
-        confidence_intervals.append((size, conf_interval))
-        results.append((size, mean_time, std_dev, all(correctness)))
-
-        print(f"Mean time: {mean_time:.4f}s, Std Dev: {std_dev:.4f}s, Correctness: {all(correctness)}")
-
-    sizes, means, errors = zip(*[(r[0], r[1], r[2]) for r in results])
-    fig, ax = plt.subplots()
-    ax.errorbar(sizes, means, yerr=errors, fmt='-o')
-    ax.set_xlabel('Matrix Size')
-    ax.set_ylabel('Time (seconds)')
-    ax.set_title('Performance Analysis with Error Bars')
+    plt.figure()
+    plt.plot(sizes, times, 'o-', label='Measured Time')
+    plt.xlabel('Matrix Size')
+    plt.ylabel('Time (seconds)')
+    plt.title('Matrix Multiplication Performance')
     plt.xscale('log')
     plt.yscale('log')
+    plt.legend()
     plt.show()
-
 
 if __name__ == "__main__":
     main()
