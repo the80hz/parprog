@@ -47,8 +47,8 @@
 
 1. Склонируйте репозиторий:
     ```sh
-    git clone <репозиторий>
-    cd <папка_репозитория>
+    git clone https://github.com/the80hz/parprog.git
+    cd parprog
     ```
 
 2. Запустите скрипт для создания виртуальной среды venv:
