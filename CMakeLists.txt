@@ -8,6 +8,6 @@ include_directories(${MPI_INCLUDE_PATH})
 
 add_executable(single single.cpp)
 
-add_executable(mpi mpi.cpp)
+# add_executable(mpi mpi.cpp)
 
-target_link_libraries(mpi ${MPI_LIBRARIES})
+# target_link_libraries(mpi ${MPI_LIBRARIES})
