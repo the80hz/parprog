@@ -53,65 +53,50 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
 
     std::vector<int> sizes = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-    int count = 5;
+    int count = 100;
     std::string data_dir = "data";
+    std::ofstream timingFile;
 
     if (rank == 0) {
-        std::ofstream timingFile(data_dir + "/timingResults.txt");
+        timingFile.open(data_dir + "/timingResults_mpi.txt");
+    }
 
-        for (int size : sizes) {
-            std::vector<std::vector<int>> matrixA = readMatrix(data_dir + "/matrixA_" + std::to_string(size) + ".txt", size);
-            std::vector<std::vector<int>> matrixB = readMatrix(data_dir + "/matrixB_" + std::to_string(size) + ".txt", size);
-            std::vector<std::vector<int>> resultMatrix(size, std::vector<int>(size));
+    for (int size : sizes) {
+        std::vector<std::vector<int>> matrixA = readMatrix(data_dir + "/matrixA_" + std::to_string(size) + ".txt", size);
+        std::vector<std::vector<int>> matrixB = readMatrix(data_dir + "/matrixB_" + std::to_string(size) + ".txt", size);
+        std::vector<std::vector<int>> resultMatrix(size, std::vector<int>(size));
 
-            for (int run = 0; run < count; run++) {
-                auto start = std::chrono::high_resolution_clock::now();
+        for (int run = 0; run < count; run++) {
+            auto start = std::chrono::high_resolution_clock::now();
 
-                // Broadcast matrices to all processes
-                for (int i = 0; i < size; i++) {
-                    MPI_Bcast(matrixA[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-                    MPI_Bcast(matrixB[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-                }
+            // Broadcast matrices to all processes
+            for (int i = 0; i < size; i++) {
+                MPI_Bcast(matrixA[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
+                MPI_Bcast(matrixB[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
+            }
 
-                // Multiply matrices in parallel
-                multiplyMatrices(matrixA, matrixB, resultMatrix, size, rank, numProcs);
+            // Multiply matrices in parallel
+            multiplyMatrices(matrixA, matrixB, resultMatrix, size, rank, numProcs);
 
-                // Gather results from all processes
-                for (int i = 0; i < size; i++) {
-                    MPI_Gather(MPI_IN_PLACE, size / numProcs, MPI_INT, resultMatrix[i].data(), size / numProcs, MPI_INT, 0, MPI_COMM_WORLD);
-                }
+            // Gather results from all processes
+            for (int i = 0; i < size; i++) {
+                MPI_Gather(MPI_IN_PLACE, size / numProcs, MPI_INT, resultMatrix[i].data(), size / numProcs, MPI_INT, 0, MPI_COMM_WORLD);
+            }
 
-                auto end = std::chrono::high_resolution_clock::now();
+            auto end = std::chrono::high_resolution_clock::now();
+            if (rank == 0) {
                 std::chrono::duration<double> duration = end - start;
                 timingFile << size << " " << duration.count() << "\n";
             }
+        }
 
+        if (rank == 0) {
             saveMatrix(resultMatrix, data_dir + "/resultMatrix_" + std::to_string(size) + ".txt");
         }
+    }
 
+    if (rank == 0) {
         timingFile.close();
-    } else {
-        for (int size : sizes) {
-            std::vector<std::vector<int>> matrixA(size, std::vector<int>(size));
-            std::vector<std::vector<int>> matrixB(size, std::vector<int>(size));
-            std::vector<std::vector<int>> resultMatrix(size, std::vector<int>(size));
-
-            for (int run = 0; run < count; run++) {
-                // Receive matrices from the root process
-                for (int i = 0; i < size; i++) {
-                    MPI_Bcast(matrixA[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-                    MPI_Bcast(matrixB[i].data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-                }
-
-                // Multiply matrices in parallel
-                multiplyMatrices(matrixA, matrixB, resultMatrix, size, rank, numProcs);
-
-                // Send results back to the root process
-                for (int i = 0; i < size; i++) {
-                    MPI_Gather(resultMatrix[i].data() + rank * (size / numProcs), size / numProcs, MPI_INT, nullptr, 0, MPI_INT, 0, MPI_COMM_WORLD);
-                }
-            }
-        }
     }
 
     MPI_Finalize();

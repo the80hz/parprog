@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <omp.h>
 
 std::vector<std::vector<int>> readMatrix(const std::string& filename, int size) {
     std::ifstream file(filename);
@@ -30,6 +31,7 @@ void saveMatrix(const std::vector<std::vector<int>>& matrix, const std::string& 
 void multiplyMatrices(const std::vector<std::vector<int>>& matrixA,
                       const std::vector<std::vector<int>>& matrixB,
                       std::vector<std::vector<int>>& resultMatrix, int size) {
+    #pragma omp parallel for
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             resultMatrix[i][j] = 0;
@@ -44,7 +46,7 @@ int main() {
     std::vector<int> sizes = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
     int count = 100;
     std::string data_dir = "data";
-    std::ofstream timingFile(data_dir + "/timingResults_single.txt");
+    std::ofstream timingFile(data_dir + "/timingResults_omp.txt");
 
     for (int size : sizes) {
         std::vector<std::vector<int>> matrixA = readMatrix(data_dir + "/matrixA_" + std::to_string(size) + ".txt", size);
