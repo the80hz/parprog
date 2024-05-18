@@ -158,8 +158,6 @@ def main():
     ax.set_xlabel('Matrix Size')
     ax.set_ylabel('Time (seconds)')
     ax.set_title('Performance Analysis with Error Bars')
-    plt.xscale('log')
-    plt.yscale('log')
     plt.legend()
     plt.savefig('single_mpi_omp_comparison.png')
     plt.close()

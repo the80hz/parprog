@@ -44,7 +44,7 @@ void multiplyMatrices(const std::vector<std::vector<int>>& matrixA,
 
 int main() {
     std::vector<int> sizes = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-    int count = 100;
+    int count = 500;
     std::string data_dir = "data";
     std::ofstream timingFile(data_dir + "/timingResults_omp.txt");
 

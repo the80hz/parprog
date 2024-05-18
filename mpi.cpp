@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
 
     std::vector<int> sizes = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-    int count = 100;
+    int count = 500;
     std::string data_dir = "data";
     std::ofstream timingFile;
 
