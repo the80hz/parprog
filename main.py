@@ -2,6 +2,7 @@ import os
 import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import t
 
 def run_command(command):
     try:
@@ -34,14 +35,15 @@ def read_matrix(filepath):
 
 def read_timing_results(filepath):
     print(f"Reading timing results from {filepath}...")
-    sizes = []
-    times = []
+    results = {}
     with open(filepath, 'r') as file:
         for line in file:
             size, time = map(float, line.split())
-            sizes.append(int(size))
-            times.append(time)
-    return sizes, times
+            size = int(size)
+            if size not in results:
+                results[size] = []
+            results[size].append(time)
+    return results
 
 def verify_results(matrix_a, matrix_b, result_matrix):
     print("Verifying results...")
@@ -77,7 +79,7 @@ def main():
         return
 
     print("Reading timing results...")
-    sizes, times = read_timing_results(timing_results_file)
+    timing_results = read_timing_results(timing_results_file)
 
     print("Verifying multiplication results...")
     correctness = []
@@ -85,24 +87,31 @@ def main():
         matrix_a = read_matrix(f"{data_dir}/matrixA_{size}.txt")
         matrix_b = read_matrix(f"{data_dir}/matrixB_{size}.txt")
         result_matrix = read_matrix(f"{data_dir}/resultMatrix_{size}.txt")
-        if verify_results(matrix_a, matrix_b, result_matrix):
-            correctness.append(True)
-        else:
-            correctness.append(False)
+        is_correct = verify_results(matrix_a, matrix_b, result_matrix)
+        correctness.append(is_correct)
+        print(f"Size: {size}, Correct: {is_correct}")
 
-    for size, time, correct in zip(sizes, times, correctness):
-        print(f"Size: {size}, Time: {time:.4f}s, Correct: {correct}")
+    print("Processing timing results...")
+    results = []
+    for size in sizes:
+        times = timing_results[size]
+        mean_time = np.mean(times)
+        std_dev = np.std(times, ddof=1)
+        conf_interval = t.interval(0.95, len(times)-1, loc=mean_time, scale=std_dev/np.sqrt(len(times)))
+        results.append((size, mean_time, conf_interval[1] - mean_time))
 
     print("Plotting results...")
-    plt.figure()
-    plt.plot(sizes, times, 'o-', label='Measured Time')
-    plt.xlabel('Matrix Size')
-    plt.ylabel('Time (seconds)')
-    plt.title('Matrix Multiplication Performance')
+    sizes, means, errors = zip(*results)
+    fig, ax = plt.subplots()
+    ax.errorbar(sizes, means, yerr=errors, fmt='-o')
+    ax.set_xlabel('Matrix Size')
+    ax.set_ylabel('Time (seconds)')
+    ax.set_title('Performance Analysis with Error Bars')
     plt.xscale('log')
     plt.yscale('log')
-    plt.legend()
-    plt.show()
+    plt.savefig('single.png')
+    plt.close()
+    print("Plot saved as single.png")
 
 if __name__ == "__main__":
     main()
